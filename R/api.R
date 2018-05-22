@@ -1,0 +1,342 @@
+
+#' Creates an authenticated connection with the Petfinder API. The stored
+#' authentication is then used to call the Petfinder API methods. An API key can
+#' be obtained from Petfinder by creating an account on their developer page
+#' (https://www.petfinder.com/developers/api-key). The function wraps the
+#' .Petfinder.class R6 class.
+#' 
+#' @param key The API key received from Petfinder
+#' @param secret The secret key received from Petfinder along with the API key.
+#'   Only used for methods that require additional authentication (not currently
+#'   used).
+#' @return Intialized Petfinder object that is then used to access the API.
+#' @examples 
+#' \dontrun{
+#' pf <- Petfinder(key) # Creates the connection with the Petfinder API.
+#' pf$breed.list('cat') # The connection can now be used to access the Petfinder API methods.
+#' }
+#' @export
+Petfinder <- function(key, secret = NULL) {
+  auth <- .Petfinder.class$new(key, secret)
+  
+  return(auth)
+}
+
+
+#' Internal R6 class
+.Petfinder.class <- R6::R6Class(".Petfinder.class",
+
+  public = list(
+    key = NULL,
+    secret = NULL,
+    host = NULL,
+    
+    initialize = function(key, secret = NULL) {
+      
+      self$key <- key
+      self$secret <- secret
+      self$host <- 'http://api.petfinder.com/'
+      
+    },
+
+    breed.list = function(animal, return_df = FALSE) {
+      check_inputs(animal=animal)
+      
+      url <- paste0(self$host, 'breed.list', sep = '')
+      params <- parameters(key = self$key, animal = animal)
+
+      breeds <- return_json(url, params)
+      
+      if (return_df) {
+        breeds <- breeds$petfinder$breeds$breed
+        colnames(breeds) <- paste0(animal, '.breeds', sep = '')
+      }
+
+      return(breeds)
+    },
+    
+    pet.find = function(location,
+                        animal = NULL,
+                        breed = NULL,
+                        size = NULL,
+                        sex = NULL,
+                        age = NULL,
+                        offset = NULL,
+                        count = NULL,
+                        output = NULL,
+                        pages = NULL, 
+                        return_df = FALSE) {
+      
+      check_inputs(animal = animal, size = size, sex = sex, age = age, count = count, pages = pages)
+      
+      url <- paste0(self$host, 'pet.find', sep = '')
+      params <- parameters(key = self$key,
+                           location = location,
+                           animal = animal,
+                           breed = breed,
+                           size = size,
+                           sex = sex,
+                           age = age,
+                           offset = offset,
+                           count = count,
+                           output = output,
+                           pages = pages)
+      
+      r <- return_json(url, params)
+      
+      if (!is.null(pages)) {
+        r <- paged_result(r = r, url = url, params = params)
+        
+        if (return_df) {
+          r <- dplyr::bind_rows(lapply(r, function(x) {
+            pet_records_df(x)
+          }))
+        }
+      }
+      else {
+        if (return_df) {
+          r <- pet_records_df(r)
+        }  
+      }
+      
+      return(r)
+    },
+    
+    pet.get = function(petId, 
+                       return_df = FALSE) {
+      
+      url <- paste0(self$host, 'pet.get', sep = '')
+      params <- parameters(key = self$key, id = petId)
+      
+      if (length(petId) > 1) {
+        pets <- lapply(as.vector(petId), function(x) {
+          params['id'] <- x
+          return_json(url, params)
+        })
+        
+        if (return_df) {
+          pets <- dplyr::bind_rows(lapply(pets, function(x) {
+            pet_record(x$petfinder$pet)
+          }))
+        }
+      }
+      else {
+        pets <- return_json(url, params)
+        
+        if (return_df) {
+          pets <- pet_record(pets$petfinder$pet)  
+        }
+        
+      }
+      
+      return(pets)
+    },
+    
+    pet.getRandom = function(records = NULL,
+                             animal = NULL,
+                             breed = NULL,
+                             size = NULL,
+                             sex = NULL,
+                             location = NULL,
+                             shelterId = NULL,
+                             output = NULL, 
+                             return_df = FALSE) {
+      
+      check_inputs(animal = animal, size = size, sex = sex)
+      
+      url <- paste0(self$host, 'pet.getRandom', sep = '')
+      params <- parameters(key = self$key,
+                                   animal = animal,
+                                   breed = breed,
+                                   size = size,
+                                   sex = sex,
+                                   location = location,
+                                   shelterId = shelterId,
+                                   output = output)
+      
+      if (!is.null(records)) {
+        pets <- list()
+      
+        for (i in 1:records) {
+          pets[[i]] <- return_json(url, params)
+        }
+        
+        if (return_df) {
+          pets <- dplyr::bind_rows(lapply(pets, function(x) {
+            pet_record(x$petfinder$pet)
+          }))
+        }
+      }
+      else {
+        pets <- return_json(url, params)
+        
+        if (return_df) {
+          pets <- pet_record(pets$petfinder$pet)
+        }
+      }
+      
+      return(pets)
+    },
+    
+    shelter.find = function(location,
+                            name = NULL,
+                            offset = NULL,
+                            count = NULL,
+                            pages = NULL, 
+                            return_df = FALSE) {
+      
+      check_inputs(count = count, pages = pages)
+      
+      url <- paste0(self$host, 'shelter.find', sep = '')
+      params <- parameters(key = self$key,
+                                   location = location,
+                                   name = name,
+                                   offset = offset,
+                                   count = count,
+                                   pages = pages)
+      
+      r <- return_json(url, params)
+      
+      if (!is.null(pages)) {
+        r <- paged_result(r = r, url = url, params = params)
+        
+        if (return_df) {
+          
+          if (!is.null(count) && count == 1) {
+            r <- dplyr::bind_rows(lapply(r, function(x) {
+              shelter_records_to_df(x$petfinder$shelters$shelter)
+            }))
+          }
+          else {
+            r <- dplyr::bind_rows(lapply(r, function(x) {
+              shelter_records_to_df(x$petfinder$shelters)
+            }))
+          }
+        }
+      }
+      
+      else {
+        if (return_df) {
+          
+          if (!is.null(count) && count == 1) {
+            r <- r$petfinder$shelters$shelter
+          }
+          else {
+            r <- r$petfinder$shelters
+          }
+          
+          r <- shelter_records_to_df(r)
+          
+        }
+      }
+      return(r)
+    },
+    
+    shelter.get = function(shelterId, 
+                           return_df = FALSE) {
+      
+      url <- paste0(self$host, 'shelter.get', sep = '')
+      params <- parameters(key = self$key, id = shelterId)
+      
+      if (length(shelterId) > 1) {
+        shelters <- lapply(shelterId, function(x) {
+          params['id'] <- x
+          return_json(url, params)
+        })
+        
+        if (return_df) {
+          shelters <- dplyr::bind_rows(lapply(shelters, function(x) {
+            shelter_records_to_df(x$petfinder$shelter)
+          }))
+        }
+      }
+      
+      
+      else {
+        shelters <- return_json(url, params)
+        if (return_df) {
+          shelters <- shelter_records_to_df(shelters$petfinder$shelter)
+        }
+      }
+      
+      return(shelters)
+    },
+    
+    shelter.getPets = function(shelterId,
+                               status = NULL,
+                               offset = NULL,
+                               count = NULL,
+                               output = NULL,
+                               pages = NULL, 
+                               return_df = FALSE) {
+      
+      check_inputs(count = count, pages = pages)
+      
+      url <- paste0(self$host, 'shelter.getPets', sep = '')
+      params <- parameters(key = self$key,
+                           id = shelterId,
+                           status = status,
+                           offset = offset,
+                           count = count,
+                           output = output,
+                           pages = pages)
+      
+      r <- return_json(url, params)
+      
+      if (!is.null(pages)) {
+        r <- paged_result(r = r, url = url, params = params)
+        
+        if (return_df) {
+          r <- dplyr::bind_rows(lapply(r, function(x) {
+            pet_records_df(x)
+          }))
+          
+          r <- r[!duplicated(r),]
+        }
+      }
+      
+      else {
+        if (return_df) {
+          r <- pet_records_df(r)
+        }
+      }
+      return(r)
+    },
+    
+    shelter.listByBreed = function(animal,
+                                   breed,
+                                   offset = NULL,
+                                   count = NULL,
+                                   pages = NULL) {
+      
+      check_inputs(animal = animal, count = count, pages = pages)
+      
+      url <- paste0(self$host, 'shelter.listByBreed', sep = '')
+      params <- parameters(key = self$key,
+                           animal = animal,
+                           breed = breed,
+                           offset = offset,
+                           count = count,
+                           pages = pages)
+      
+      r <- return_json(url, params)
+      
+      return(r)
+    }
+  )
+)
+
+
+return_json = function(url, params) {
+  params['format'] = 'json'
+  url <- httr::parse_url(url)
+  url$query <- params
+  url <- httr::build_url(url)
+  
+  json_url <- jsonlite::fromJSON(url, flatten = TRUE, 
+                                 simplifyDataFrame = TRUE, 
+                                 simplifyMatrix = TRUE, 
+                                 simplifyVector = TRUE)
+  
+  return(json_url)
+}
