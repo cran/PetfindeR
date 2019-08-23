@@ -1,23 +1,23 @@
 Package: PetfindeR
 Type: Package
 Title: 'Petfinder' API Wrapper
-Version: 1.1.3
+Version: 2.0.0
 Author: Aaron Schlegel
-Maintainer: Aaron Schlegel <aaron@aaronschlegel.com>
+Maintainer: Aaron Schlegel <aaron@aaronschlegel.me>
 Description: 
-  Wrapper of the 'Petfinder API' <https://www.petfinder.com/developers/api-docs> that implements 
+  Wrapper of the 'Petfinder API' <https://www.petfinder.com/developers/v2/docs/> that implements 
   methods for interacting with and extracting data from the 'Petfinder' database. The 'Petfinder 
-  REST API' allows access to the 'Petfinder' database, one of the largest online, searchable 
-  databases of adoptable animals and animal welfare organizations across North America.
+  REST API' allows access to the 'Petfinder' database, one of the largest online databases of 
+  adoptable animals and animal welfare organizations across North America.
 Encoding: UTF-8
 LazyData: true
-Imports: dplyr, httr, jsonlite, plyr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 License: MIT + file LICENSE
 URL: https://github.com/aschleg/PetfindeR
 VignetteBuilder: knitr
-Suggests: R6, httptest, testthat, knitr, rmarkdown
+Imports: R6, httr, jsonlite
+Suggests: testthat, knitr, rmarkdown, dplyr
 NeedsCompilation: no
-Packaged: 2018-05-19 12:58:56 UTC; aaronschlegel
+Packaged: 2019-08-23 15:16:35 UTC; aaronschlegel
 Repository: CRAN
-Date/Publication: 2018-05-22 12:23:55 UTC
+Date/Publication: 2019-08-23 15:30:15 UTC
