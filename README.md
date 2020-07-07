@@ -1,32 +1,35 @@
-# PetfinderR
+# PetfindeR
 
 [![Build Status](https://travis-ci.org/aschleg/PetfindeR.svg?branch=master)](https://travis-ci.org/aschleg/PetfindeR)
 [![Build status](https://ci.appveyor.com/api/projects/status/78048x1q7086r0dl?svg=true)](https://ci.appveyor.com/project/aschleg/petfinder)
 [![codecov](https://codecov.io/gh/aschleg/PetfindeR/branch/master/graph/badge.svg)](https://codecov.io/gh/aschleg/PetfindeR)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5424a91e87e042b083707a568e890c33)](https://www.codacy.com/manual/aschleg/PetfindeR?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=aschleg/PetfindeR&amp;utm_campaign=Badge_Grade)
 ![https://cran.r-project.org/package=PetfindeR](https://www.r-pkg.org/badges/version/PetfindeR)
 
 :cat2: :dog2: :rooster: :rabbit2: :racehorse:
 
-`PetfinderR` wraps the [Petfinder API](https://www.petfinder.com/developers/api-docs) in an easy-to-use, conveninent R package. The `PetfinderR` library also provides handy methods for coercing the returned JSON from the API into usable `data.frame` objects to facilitate data analysis and other tasks. 
+`PetfindeR` wraps the [Petfinder API](https://www.petfinder.com/developers/api-docs) in an easy-to-use, conveninent R package. The `PetfindeR` library also provides handy methods for coercing the returned JSON from the API into usable `data.frame` objects to facilitate data analysis and other tasks. 
 
 ## Installation
 
-`PetfinderR` can be installed through the usual means:
-
-~~~ r
-install.packages('PetfinderR')
-~~~
-
-The package can also be installed with [`devtools`](https://cran.r-project.org/package=devtools) for those wanting the most recent development version.
+`Petfinder` is best installed with [`devtools`](https://cran.r-project.org/package=devtools) to get the most recent production version. 
 
 ~~~ r
 install.packages('devtools') # if devtools is not already installed
 devtools::install_github('aschleg/PetfindeR')
 ~~~
 
+`PetfindeR` can also be installed from CRAN using `install.packages()`: 
+
+~~~ r
+install.packages('PetfindeR')
+~~~
+
+Please note the version on CRAN may be behind the most recent version on GitHub. I apologize for any confusion or inconvenience; however, submitting the package to CRAN can often be delayed due to reviews and other submission steps.
+
 ## Examples and Usage
 
-An account must first be created with [Petfinder](https://www.petfinder.com/developers/) to receive an API and secret key. The API and secret key will be used to grant access to the Petfinder API, which lasts for 3600 seconds, or one hour. After the authentication period ends, you must re-authenticate with the Petfinder API. The following are some quick examples for using `PetfinderR` to get started. More in-depth tutorials for `PetfinderR` and some examples of what can be done with the library, please see the More Examples and Tutorials section below.
+An account must first be created with [Petfinder](https://www.petfinder.com/developers/) to receive an API and secret key. The API and secret key will be used to grant access to the Petfinder API, which lasts for 3600 seconds, or one hour. After the authentication period ends, you must re-authenticate with the Petfinder API. The following are some quick examples for using `PetfindeR` to get started. More in-depth tutorials for `PetfindeR` and some examples of what can be done with the library, please see the More Examples and Tutorials section below.
 
 ### Authenticating with the Petfinder API
 
@@ -95,10 +98,6 @@ wa_organizations = pf$organizations(state='WA')
 ## Documentation
 
 * [Petfinder API v2.0 documentation](https://www.petfinder.com/developers/v2/docs/)
-
-## Vignettes
-
-Vignettes are long-form documentation that explore more in-depth concepts related to the package. 
 
 ## About [Petfinder.com](https://www.petfinder.com)
 

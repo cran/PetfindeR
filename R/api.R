@@ -140,10 +140,15 @@ Petfinder <- function(key, secret) {
                        coat = NULL, 
                        status = NULL, 
                        name = NULL, 
-                       organization_id = NULL, 
+                       organization = NULL, 
                        location = NULL, 
                        distance = NULL, 
                        sort = NULL, 
+                       good_with_cats = NULL,
+                       good_with_children = NULL,
+                       good_with_dogs = NULL, 
+                       before_date = NULL,
+                       after_date = NULL,
                        pages = 1,
                        results_per_page = 20, 
                        return_df = FALSE) {
@@ -171,6 +176,47 @@ Petfinder <- function(key, secret) {
       else {
         url <- paste0(private$host, 'animals/', sep = '')
         
+        if (!is.null(good_with_cats)) {
+          if (!is.logical(as.logical(as.integer(good_with_cats)))) {
+            stop('good_with_cats must be a logical object (TRUE, FALSE) or coerceable to a coerceable object (1, 0, "1", "0")')
+          }
+          else {
+            good_with_cats <- as.integer(as.logical(as.integer(good_with_cats)))  
+          }
+        }
+        
+        if (!is.null(good_with_children)) {
+          if (!is.logical(as.logical(as.integer(good_with_children)))) {
+            stop('good_with_children must be a logical object (TRUE, FALSE) or coerceable to a coerceable object (1, 0, "1", "0")')
+          }
+          else {
+            good_with_children <- as.integer(as.logical(as.integer(good_with_children)))  
+          }
+        }
+        
+        if (!is.null(good_with_dogs)) {
+          if (!is.logical(as.logical(as.integer(good_with_dogs)))) {
+            stop('good_with_dogs must be a logical object (TRUE, FALSE) or coerceable to a coerceable object (1, 0, "1", "0")')
+          }
+          else {
+            good_with_dogs <- as.integer(as.logical(as.integer(good_with_dogs)))
+          }
+        }
+        
+        if (!is.null(before_date)) {
+          before_date <- lubridate::format_ISO8601(as.POSIXct(before_date), usetz = TRUE)
+        }
+        
+        if (!is.null(after_date)) {
+          after_date <- lubridate::format_ISO8601(as.POSIXct(after_date), usetz = TRUE)
+        }
+        
+        if (!is.null(after_date) && !is.null(before_date)) {
+          if (before_date < after_date) {
+            stop('before_date must a date or datetime earlier than after_date.')
+          }
+        }
+        
         params <- private$parameters(animal_type = animal_type,
                                      breed = breed,
                                      size = size,
@@ -180,10 +226,15 @@ Petfinder <- function(key, secret) {
                                      coat = coat,
                                      status = status,
                                      name = name,
-                                     organization_id = organization_id,
+                                     organization = organization,
                                      location = location,
                                      distance = distance,
                                      sort = sort,
+                                     good_with_cats = good_with_cats, 
+                                     good_with_children = good_with_children, 
+                                     good_with_dogs = good_with_dogs,
+                                     before_date = before_date, 
+                                     after_date = after_date,
                                      results_per_page = results_per_page
                                      )
         
@@ -221,7 +272,8 @@ Petfinder <- function(key, secret) {
           r <- private$get_request(url = url, 
                                    params = params)
           
-          req_json <- jsonlite::fromJSON(httr::content(r, as='text', encoding = 'utf-8'))
+          req_json <- jsonlite::fromJSON(httr::content(r, as='text', encoding = 'utf-8'),
+                                         flatten = TRUE)
           
           animals_list[[paste0('page', as.character(1), sep='')]] <- req_json$animals
           
@@ -456,8 +508,13 @@ Petfinder <- function(key, secret) {
                           name = NULL,
                           age = NULL,
                           animal_id = NULL,
-                          organization_id = NULL,
+                          organization = NULL,
                           status = NULL,
+                          good_with_cats = NULL,
+                          good_with_children = NULL,
+                          good_with_dogs = NULL,
+                          before_date = NULL,
+                          after_date = NULL,
                           results_per_page = NULL,
                           page = NULL) {
       
@@ -476,8 +533,13 @@ Petfinder <- function(key, secret) {
                      'name' = name,
                      'age' = age,
                      'animal_id' = animal_id,
-                     'organization_id' = organization_id,
-                     'status' = status,
+                     'organization' = organization,
+                     'status' = status, 
+                     'good_with_cats' = good_with_cats,
+                     'good_with_children' = good_with_children,
+                     'good_with_dogs' = good_with_dogs,
+                     'before' = before_date,
+                     'after' = after_date,
                      'limit' = results_per_page,
                      'page' = page
       )
@@ -580,7 +642,6 @@ Petfinder <- function(key, secret) {
           stop('results per page cannot be greater than 100.')
         } 
       }
-      
     }
   )
 )
